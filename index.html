@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WishCraft — Wish Page Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FDF8F0;
+    --gold: #C9962A;
+    --gold-light: #F5E4B8;
+    --ink: #1A1614;
+    --muted: #7A6F68;
+    --surface: #FFFCF7;
+    --border: rgba(201,150,42,0.2);
+    --rose: #E8A598;
+    --teal: #4A9B8E;
+    --lavender: #8B7BB5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── GENERATOR VIEW ── */
+  #generator {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 3rem 2rem 4rem;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    background: var(--gold-light);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 1.2rem;
+  }
+
+  h1.brand {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+  }
+
+  h1.brand em { font-style: italic; color: var(--gold); }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 300;
+    margin-bottom: 2.8rem;
+    max-width: 440px;
+  }
+
+  /* Occasion Picker */
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+  }
+
+  .occasion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 2.4rem;
+  }
+
+  .occasion-btn {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .occasion-btn .occ-icon { font-size: 26px; display: block; margin-bottom: 6px; }
+  .occasion-btn .occ-name { font-size: 12px; font-weight: 500; color: var(--ink); }
+
+  .occasion-btn:hover {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(201,150,42,0.15);
+  }
+
+  .occasion-btn.active {
+    border-color: var(--gold);
+    background: var(--gold-light);
+    box-shadow: 0 4px 16px rgba(201,150,42,0.2);
+  }
+
+  /* Form fields */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, textarea, select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    resize: vertical;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,150,42,0.1);
+  }
+
+  textarea { min-height: 100px; }
+
+  .generate-btn {
+    margin-top: 1.6rem;
+    width: 100%;
+    padding: 16px;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .generate-btn:hover {
+    background: #2D2420;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(26,22,20,0.25);
+  }
+
+  .generate-btn:active { transform: scale(0.99); }
+
+  /* Link result */
+  .result-box {
+    display: none;
+    margin-top: 2rem;
+    background: var(--surface);
+    border: 1.5px solid var(--gold);
+    border-radius: 16px;
+    padding: 1.6rem;
+  }
+
+  .result-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .result-box p { font-size: 13px; color: var(--muted); margin-bottom: 1rem; }
+
+  .link-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .link-display {
+    flex: 1;
+    padding: 10px 14px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: monospace;
+  }
+
+  .copy-btn {
+    padding: 10px 18px;
+    background: var(--gold);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .copy-btn:hover { background: #B8851F; }
+
+  .preview-link-btn {
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .preview-link-btn:hover { text-decoration: underline; }
+
+  /* ── WISH PAGE VIEW ── */
+  #wish-page { display: none; min-height: 100vh; }
+
+  /* Birthday */
+  .theme-birthday {
+    background: linear-gradient(135deg, #FF6B9D 0%, #FF8E53 40%, #FFC3A0 100%);
+    position: relative; overflow: hidden;
+  }
+
+  /* New Year */
+  .theme-newyear {
+    background: linear-gradient(160deg, #0A0A1A 0%, #1A1A3E 50%, #0D0D2B 100%);
+  }
+
+  /* Easter */
+  .theme-easter {
+    background: linear-gradient(135deg, #A8EDCD 0%, #F7D4ED 50%, #FFF3C4 100%);
+  }
+
+  /* Halloween */
+  .theme-halloween {
+    background: linear-gradient(160deg, #0D0D0D 0%, #1A0A00 50%, #0D0D0D 100%);
+  }
+
+  /* Valentine */
+  .theme-valentine {
+    background: linear-gradient(135deg, #FF4E6A 0%, #FF85A1 50%, #FF4E6A 100%);
+  }
+
+  /* Anniversary */
+  .theme-anniversary {
+    background: linear-gradient(135deg, #C9962A 0%, #F5E4B8 40%, #8B6914 100%);
+  }
+
+  /* Christmas */
+  .theme-christmas {
+    background: linear-gradient(135deg, #1A4A2E 0%, #2D6E47 40%, #8B1A1A 100%);
+  }
+
+  /* Diwali */
+  .theme-diwali {
+    background: linear-gradient(135deg, #1A0A00 0%, #4A1A00 40%, #1A0A00 100%);
+  }
+
+  .wish-inner {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .wish-emoji {
+    font-size: 80px;
+    margin-bottom: 1rem;
+    animation: floatBounce 3s ease-in-out infinite;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.2));
+  }
+
+  @keyframes floatBounce {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+  }
+
+  .wish-occasion-tag {
+    display: inline-block;
+    padding: 5px 18px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 1.4rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .wish-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 7vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 0.6rem;
+  }
+
+  .wish-subtitle {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    font-style: italic;
+    margin-bottom: 1.8rem;
+    opacity: 0.85;
+  }
+
+  .wish-message-card {
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 1.8rem 2rem;
+    margin-bottom: 2rem;
+    max-width: 480px;
+    line-height: 1.75;
+    font-size: 1rem;
+    font-weight: 300;
+    text-align: left;
+    position: relative;
+  }
+
+  .wish-message-card::before {
+    content: '"';
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    position: absolute;
+    top: -10px;
+    left: 18px;
+    opacity: 0.3;
+  }
+
+  .wish-from {
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    opacity: 0.75;
+    margin-top: 0.5rem;
+  }
+
+  .particles-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Confetti for birthday */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 14px;
+    animation: confettiFall linear infinite;
+    opacity: 0;
+    z-index: 1;
+    border-radius: 2px;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* Stars for new year */
+  .star-particle {
+    position: fixed;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    animation: starTwinkle ease-in-out infinite;
+    z-index: 1;
+  }
+
+  @keyframes starTwinkle {
+    0%, 100% { opacity: 0.1; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.5); }
+  }
+
+  /* Floating hearts for valentine */
+  .heart-float {
+    position: fixed;
+    font-size: 20px;
+    animation: heartRise linear infinite;
+    z-index: 1;
+    opacity: 0;
+  }
+
+  @keyframes heartRise {
+    0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+  }
+
+  /* Bats for halloween */
+  .bat-fly {
+    position: fixed;
+    font-size: 22px;
+    animation: batFly linear infinite;
+    z-index: 1;
+  }
+
+  @keyframes batFly {
+    0% { transform: translateX(-80px) translateY(0) rotate(-10deg); }
+    25% { transform: translateX(25vw) translateY(-30px) rotate(10deg); }
+    50% { transform: translateX(50vw) translateY(20px) rotate(-15deg); }
+    75% { transform: translateX(75vw) translateY(-40px) rotate(12deg); }
+    100% { transform: translateX(110vw) translateY(10px) rotate(-5deg); }
+  }
+
+  /* Petals for easter */
+  .petal-fall {
+    position: fixed;
+    font-size: 16px;
+    animation: petalDrift linear infinite;
+    z-index: 1;
+    opacity: 0;
+  }
+
+  @keyframes petalDrift {
+    0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0.8; }
+    100% { transform: translateY(110vh) translateX(80px) rotate(360deg); opacity: 0; }
+  }
+
+  /* Gold sparkles for anniversary/diwali */
+  .sparkle {
+    position: fixed;
+    font-size: 14px;
+    animation: sparklePop ease-in-out infinite;
+    z-index: 1;
+  }
+
+  @keyframes sparklePop {
+    0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+    50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  }
+
+  /* Snowflakes for Christmas */
+  .snow-fall {
+    position: fixed;
+    font-size: 16px;
+    animation: snowDrift linear infinite;
+    z-index: 1;
+    opacity: 0;
+  }
+
+  @keyframes snowDrift {
+    0% { transform: translateY(-30px) translateX(0) rotate(0deg); opacity: 0.9; }
+    100% { transform: translateY(110vh) translateX(-50px) rotate(-360deg); opacity: 0.2; }
+  }
+
+  .back-btn {
+    position: fixed;
+    top: 20px; left: 20px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 13px;
+    cursor: pointer;
+    z-index: 100;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s;
+  }
+
+  .back-btn:hover { background: rgba(255,255,255,0.3); }
+
+  /* Theme-specific wish styles */
+  .theme-birthday .wish-title { color: #fff; }
+  .theme-birthday .wish-subtitle { color: rgba(255,255,255,0.9); }
+  .theme-birthday .wish-message-card { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+  .theme-birthday .wish-from { color: rgba(255,255,255,0.8); }
+  .theme-birthday .wish-occasion-tag { background: rgba(255,255,255,0.25); color: #fff; }
+
+  .theme-newyear .wish-title { color: #FFD700; }
+  .theme-newyear .wish-subtitle { color: rgba(255,215,0,0.8); }
+  .theme-newyear .wish-message-card { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,215,0,0.3); }
+  .theme-newyear .wish-from { color: rgba(255,255,255,0.6); }
+  .theme-newyear .wish-occasion-tag { background: rgba(255,215,0,0.2); color: #FFD700; }
+
+  .theme-easter .wish-title { color: #4A3060; }
+  .theme-easter .wish-subtitle { color: #5A4070; }
+  .theme-easter .wish-message-card { background: rgba(255,255,255,0.5); color: #3A2050; border: 1px solid rgba(255,255,255,0.7); }
+  .theme-easter .wish-from { color: #6A5080; }
+  .theme-easter .wish-occasion-tag { background: rgba(255,255,255,0.6); color: #6A3090; }
+
+  .theme-halloween .wish-title { color: #FF6B00; }
+  .theme-halloween .wish-subtitle { color: rgba(255,107,0,0.8); }
+  .theme-halloween .wish-message-card { background: rgba(255,107,0,0.08); color: rgba(255,200,100,0.9); border: 1px solid rgba(255,107,0,0.3); }
+  .theme-halloween .wish-from { color: rgba(255,107,0,0.7); }
+  .theme-halloween .wish-occasion-tag { background: rgba(255,107,0,0.15); color: #FF6B00; }
+
+  .theme-valentine .wish-title { color: #fff; }
+  .theme-valentine .wish-subtitle { color: rgba(255,255,255,0.9); }
+  .theme-valentine .wish-message-card { background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+  .theme-valentine .wish-from { color: rgba(255,255,255,0.8); }
+  .theme-valentine .wish-occasion-tag { background: rgba(255,255,255,0.25); color: #fff; }
+
+  .theme-anniversary .wish-title { color: #1A1000; }
+  .theme-anniversary .wish-subtitle { color: rgba(26,16,0,0.75); }
+  .theme-anniversary .wish-message-card { background: rgba(26,16,0,0.1); color: #1A1000; border: 1px solid rgba(201,150,42,0.4); }
+  .theme-anniversary .wish-from { color: rgba(26,16,0,0.6); }
+  .theme-anniversary .wish-occasion-tag { background: rgba(26,16,0,0.12); color: #1A1000; }
+
+  .theme-christmas .wish-title { color: #FFD700; }
+  .theme-christmas .wish-subtitle { color: rgba(255,215,0,0.85); }
+  .theme-christmas .wish-message-card { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,215,0,0.25); }
+  .theme-christmas .wish-from { color: rgba(255,255,255,0.65); }
+  .theme-christmas .wish-occasion-tag { background: rgba(255,215,0,0.15); color: #FFD700; }
+
+  .theme-diwali .wish-title { color: #FFD700; }
+  .theme-diwali .wish-subtitle { color: rgba(255,165,0,0.9); }
+  .theme-diwali .wish-message-card { background: rgba(255,165,0,0.1); color: rgba(255,220,100,0.95); border: 1px solid rgba(255,165,0,0.3); }
+  .theme-diwali .wish-from { color: rgba(255,165,0,0.7); }
+  .theme-diwali .wish-occasion-tag { background: rgba(255,165,0,0.15); color: #FFD700; }
+
+  /* Entrance animations */
+  .wish-inner > * {
+    animation: wishFadeUp 0.7s ease both;
+  }
+  .wish-inner > *:nth-child(1) { animation-delay: 0.1s; }
+  .wish-inner > *:nth-child(2) { animation-delay: 0.25s; }
+  .wish-inner > *:nth-child(3) { animation-delay: 0.4s; }
+  .wish-inner > *:nth-child(4) { animation-delay: 0.55s; }
+  .wish-inner > *:nth-child(5) { animation-delay: 0.7s; }
+  .wish-inner > *:nth-child(6) { animation-delay: 0.85s; }
+
+  @keyframes wishFadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .error-msg {
+    display: none;
+    color: #C0392B;
+    font-size: 13px;
+    margin-top: 8px;
+    padding: 10px 14px;
+    background: #FEF0EE;
+    border: 1px solid #F5C6BB;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── GENERATOR PANEL ── -->
+<div id="generator">
+  <div class="hero-badge">✦ Wish Page Creator</div>
+  <h1 class="brand">Make someone's day<br><em>unforgettable</em></h1>
+  <p class="subtitle">Build a beautiful, animated wish page and share the link — they'll love opening it.</p>
+
+  <!-- OCCASION PICKER -->
+  <div class="section-label">Choose an occasion</div>
+  <div class="occasion-grid" id="occasionGrid">
+    <button class="occasion-btn" data-occ="birthday" onclick="selectOcc(this)">
+      <span class="occ-icon">🎂</span><span class="occ-name">Birthday</span>
+    </button>
+    <button class="occasion-btn" data-occ="newyear" onclick="selectOcc(this)">
+      <span class="occ-icon">🎆</span><span class="occ-name">New Year</span>
+    </button>
+    <button class="occasion-btn" data-occ="valentine" onclick="selectOcc(this)">
+      <span class="occ-icon">💝</span><span class="occ-name">Valentine's Day</span>
+    </button>
+    <button class="occasion-btn" data-occ="easter" onclick="selectOcc(this)">
+      <span class="occ-icon">🐣</span><span class="occ-name">Easter</span>
+    </button>
+    <button class="occasion-btn" data-occ="halloween" onclick="selectOcc(this)">
+      <span class="occ-icon">🎃</span><span class="occ-name">Halloween</span>
+    </button>
+    <button class="occasion-btn" data-occ="anniversary" onclick="selectOcc(this)">
+      <span class="occ-icon">💍</span><span class="occ-name">Anniversary</span>
+    </button>
+    <button class="occasion-btn" data-occ="christmas" onclick="selectOcc(this)">
+      <span class="occ-icon">🎄</span><span class="occ-name">Christmas</span>
+    </button>
+    <button class="occasion-btn" data-occ="diwali" onclick="selectOcc(this)">
+      <span class="occ-icon">🪔</span><span class="occ-name">Diwali</span>
+    </button>
+  </div>
+
+  <!-- FORM -->
+  <div class="section-label">Add details</div>
+  <div class="form-grid">
+    <div class="field">
+      <label>To (recipient's name)</label>
+      <input type="text" id="toName" placeholder="e.g. Sarah" maxlength="40">
+    </div>
+    <div class="field">
+      <label>From (your name)</label>
+      <input type="text" id="fromName" placeholder="e.g. Alex" maxlength="40">
+    </div>
+    <div class="field full">
+      <label>Your personal message</label>
+      <textarea id="message" placeholder="Write something heartfelt… (optional — we'll add a lovely default if you leave this blank)"></textarea>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg">Please select an occasion and fill in at least the recipient's name.</div>
+
+  <button class="generate-btn" onclick="generateWishPage()">✨ Create Wish Page & Get Link</button>
+
+  <!-- RESULT -->
+  <div class="result-box" id="resultBox">
+    <h3>Your wish page is ready!</h3>
+    <p>Copy this link and send it to <span id="recipientDisplay">them</span> — they'll see a beautiful animated wish page.</p>
+    <div class="link-row">
+      <div class="link-display" id="linkDisplay">—</div>
+      <button class="copy-btn" onclick="copyLink()">Copy</button>
+    </div>
+    <button class="preview-link-btn" onclick="previewWishPage()">↗ Preview the wish page</button>
+  </div>
+</div>
+
+<!-- ── WISH PAGE PANEL ── -->
+<div id="wish-page">
+  <button class="back-btn" onclick="showGenerator()">← Make another</button>
+  <div class="wish-inner" id="wishInner"></div>
+</div>
+
+<script>
+const occasions = {
+  birthday: {
+    label: 'Happy Birthday', icon: '🎂',
+    tagText: 'Birthday Wishes',
+    subtitle: 'Wishing you the most joyful day!',
+    defaultMsg: 'May this birthday bring you endless joy, laughter, and all the good things life has to offer. Here\'s to another year of amazing adventures and beautiful memories. You deserve every bit of happiness coming your way!',
+    theme: 'theme-birthday',
+    particles: 'confetti'
+  },
+  newyear: {
+    label: 'Happy New Year', icon: '🎆',
+    tagText: 'New Year Celebrations',
+    subtitle: 'May the coming year shine bright for you',
+    defaultMsg: 'As the clock strikes midnight and we step into a brand new year, may it bring you renewed hope, sparkling opportunities, and everything your heart desires. Wishing you a year filled with growth, love, and unforgettable moments.',
+    theme: 'theme-newyear',
+    particles: 'stars'
+  },
+  valentine: {
+    label: 'Happy Valentine\'s Day', icon: '💝',
+    tagText: 'With Love',
+    subtitle: 'You make every day sweeter',
+    defaultMsg: 'On this day of love and affection, I want you to know just how much you mean to me. Your smile lights up every room, your kindness touches every heart. I\'m so grateful you\'re in my life. You are truly extraordinary.',
+    theme: 'theme-valentine',
+    particles: 'hearts'
+  },
+  easter: {
+    label: 'Happy Easter', icon: '🐣',
+    tagText: 'Easter Blessings',
+    subtitle: 'A season of joy and new beginnings',
+    defaultMsg: 'May this Easter fill your heart with warmth, your home with laughter, and your days with the gentle promise of spring. Here\'s to new beginnings, renewal, and all the sweet moments that make life beautiful.',
+    theme: 'theme-easter',
+    particles: 'petals'
+  },
+  halloween: {
+    label: 'Happy Halloween', icon: '🎃',
+    tagText: 'Spooky Season',
+    subtitle: 'Have a hauntingly good time!',
+    defaultMsg: 'Wishing you a night full of tricks, treats, and wickedly good fun! May the ghouls be friendly, the candy be plentiful, and the frights be delightfully thrilling. Here\'s to one spooktacular Halloween!',
+    theme: 'theme-halloween',
+    particles: 'bats'
+  },
+  anniversary: {
+    label: 'Happy Anniversary', icon: '💍',
+    tagText: 'Anniversary',
+    subtitle: 'Celebrating a beautiful journey together',
+    defaultMsg: 'Every year you two share together is a testament to love, commitment, and the magic of finding your perfect person. Here\'s to celebrating all the wonderful memories you\'ve created — and to the many more beautiful chapters yet to come.',
+    theme: 'theme-anniversary',
+    particles: 'sparkles'
+  },
+  christmas: {
+    label: 'Merry Christmas', icon: '🎄',
+    tagText: 'Season\'s Greetings',
+    subtitle: 'May your holidays be warm and wonderful',
+    defaultMsg: 'May this Christmas fill your home with the warmth of love, the sound of laughter, and the magic of togetherness. Wishing you all the peace and joy this beautiful season has to offer. Merry Christmas and a wonderful holiday season!',
+    theme: 'theme-christmas',
+    particles: 'snow'
+  },
+  diwali: {
+    label: 'Happy Diwali', icon: '🪔',
+    tagText: 'Festival of Lights',
+    subtitle: 'May light triumph over darkness',
+    defaultMsg: 'On this auspicious Festival of Lights, may your life shine bright with happiness, prosperity, and love. May every lamp you light symbolize the triumph of knowledge over ignorance and joy over sorrow. Wishing you and your family a very Happy Diwali!',
+    theme: 'theme-diwali',
+    particles: 'sparkles'
+  }
+};
+
+let selectedOcc = null;
+let generatedLink = null;
+
+function selectOcc(btn) {
+  document.querySelectorAll('.occasion-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedOcc = btn.dataset.occ;
+}
+
+function generateWishPage() {
+  const to = document.getElementById('toName').value.trim();
+  const from = document.getElementById('fromName').value.trim();
+  const msg = document.getElementById('message').value.trim();
+  const errEl = document.getElementById('errorMsg');
+
+  if (!selectedOcc || !to) {
+    errEl.style.display = 'block';
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const params = new URLSearchParams();
+  params.set('occ', selectedOcc);
+  params.set('to', to);
+  if (from) params.set('from', from);
+  if (msg) params.set('msg', msg);
+
+  const link = window.location.href.split('?')[0] + '#wishpage?' + params.toString();
+  generatedLink = link;
+
+  document.getElementById('linkDisplay').textContent = link.length > 60 ? link.substring(0, 60) + '...' : link;
+  document.getElementById('recipientDisplay').textContent = to;
+  document.getElementById('resultBox').style.display = 'block';
+  document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function copyLink() {
+  if (!generatedLink) return;
+  navigator.clipboard.writeText(generatedLink).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#27AE60';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.style.background = ''; }, 2000);
+  }).catch(() => {
+    const el = document.getElementById('linkDisplay');
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().addRange(range);
+  });
+}
+
+function previewWishPage() {
+  if (!generatedLink) return;
+  const hash = generatedLink.split('#')[1];
+  if (hash) renderWishFromHash(hash);
+}
+
+function showGenerator() {
+  document.getElementById('wish-page').style.display = 'none';
+  document.getElementById('generator').style.display = 'block';
+  clearParticles();
+  window.location.hash = '';
+}
+
+function renderWishFromHash(hash) {
+  const qStr = hash.replace('wishpage?', '');
+  const params = new URLSearchParams(qStr);
+  const occ = params.get('occ');
+  const to = params.get('to');
+  const from = params.get('from');
+  const msg = params.get('msg');
+
+  if (!occ || !occasions[occ]) return;
+
+  const o = occasions[occ];
+  const finalMsg = msg || o.defaultMsg;
+  const fromLine = from ? `— with love from ${from}` : '';
+
+  const wishPage = document.getElementById('wish-page');
+  wishPage.className = '';
+  wishPage.className = 'wish-page-active ' + o.theme;
+
+  document.getElementById('wishInner').innerHTML = `
+    <div class="wish-emoji">${o.icon}</div>
+    <div class="wish-occasion-tag">${o.tagText}</div>
+    <div class="wish-title">Dear ${to},</div>
+    <div class="wish-subtitle">${o.label}!</div>
+    <div class="wish-message-card">
+      ${finalMsg}
+      ${fromLine ? `<div class="wish-from">${fromLine}</div>` : ''}
+    </div>
+  `;
+
+  document.getElementById('generator').style.display = 'none';
+  wishPage.style.display = 'block';
+
+  // Spawn particles
+  setTimeout(() => spawnParticles(o.particles, o.theme), 400);
+}
+
+function clearParticles() {
+  document.querySelectorAll('.confetti-piece, .star-particle, .heart-float, .bat-fly, .petal-fall, .sparkle, .snow-fall').forEach(e => e.remove());
+}
+
+function spawnParticles(type, theme) {
+  clearParticles();
+  const parent = document.getElementById('wish-page');
+
+  if (type === 'confetti') {
+    const colors = ['#FF6B9D','#FFD700','#00CEC9','#6C5CE7','#FDCB6E','#FF7675','#74B9FF','#55EFC4'];
+    for (let i = 0; i < 40; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*5}s;transform:rotate(${Math.random()*360}deg) skew(${Math.random()*15}deg);`;
+      parent.appendChild(c);
+    }
+  }
+
+  if (type === 'stars') {
+    for (let i = 0; i < 80; i++) {
+      const s = document.createElement('div');
+      s.className = 'star-particle';
+      s.style.cssText = `left:${Math.random()*100}vw;top:${Math.random()*100}vh;background:${Math.random()>0.5?'#FFD700':'#FFF'};animation-duration:${1.5+Math.random()*3}s;animation-delay:${Math.random()*4}s;width:${2+Math.random()*4}px;height:${2+Math.random()*4}px;`;
+      parent.appendChild(s);
+    }
+  }
+
+  if (type === 'hearts') {
+    for (let i = 0; i < 18; i++) {
+      const h = document.createElement('div');
+      h.className = 'heart-float';
+      h.textContent = ['❤️','💕','💖','💗','💓'][Math.floor(Math.random()*5)];
+      h.style.cssText = `left:${Math.random()*100}vw;animation-duration:${5+Math.random()*6}s;animation-delay:${Math.random()*6}s;font-size:${14+Math.random()*20}px;`;
+      parent.appendChild(h);
+    }
+  }
+
+  if (type === 'bats') {
+    for (let i = 0; i < 8; i++) {
+      const b = document.createElement('div');
+      b.className = 'bat-fly';
+      b.textContent = '🦇';
+      b.style.cssText = `top:${10+Math.random()*60}vh;animation-duration:${6+Math.random()*8}s;animation-delay:${Math.random()*8}s;font-size:${16+Math.random()*14}px;`;
+      parent.appendChild(b);
+    }
+  }
+
+  if (type === 'petals') {
+    const pets = ['🌸','🌼','🌺','🌷'];
+    for (let i = 0; i < 25; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal-fall';
+      p.textContent = pets[Math.floor(Math.random()*pets.length)];
+      p.style.cssText = `left:${Math.random()*100}vw;animation-duration:${4+Math.random()*5}s;animation-delay:${Math.random()*5}s;font-size:${12+Math.random()*14}px;`;
+      parent.appendChild(p);
+    }
+  }
+
+  if (type === 'sparkles') {
+    const sps = ['✨','⭐','💫','🌟','✦'];
+    for (let i = 0; i < 30; i++) {
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      s.textContent = sps[Math.floor(Math.random()*sps.length)];
+      s.style.cssText = `left:${Math.random()*100}vw;top:${Math.random()*100}vh;animation-duration:${1.5+Math.random()*3}s;animation-delay:${Math.random()*5}s;font-size:${12+Math.random()*16}px;`;
+      parent.appendChild(s);
+    }
+  }
+
+  if (type === 'snow') {
+    for (let i = 0; i < 35; i++) {
+      const s = document.createElement('div');
+      s.className = 'snow-fall';
+      s.textContent = ['❄️','❅','❆','⛄'][Math.floor(Math.random()*3)];
+      s.style.cssText = `left:${Math.random()*100}vw;animation-duration:${5+Math.random()*7}s;animation-delay:${Math.random()*6}s;font-size:${12+Math.random()*14}px;`;
+      parent.appendChild(s);
+    }
+  }
+}
+
+// On load: check if URL has a wish hash
+window.addEventListener('load', () => {
+  const hash = window.location.hash;
+  if (hash && hash.includes('wishpage?')) {
+    renderWishFromHash(hash.substring(1));
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash;
+  if (hash && hash.includes('wishpage?')) {
+    renderWishFromHash(hash.substring(1));
+  } else if (!hash) {
+    showGenerator();
+  }
+});
+</script>
+</body>
+</html>
